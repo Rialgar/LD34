@@ -26,21 +26,32 @@ requirejs.config({
 
 requirejs(['three', 'playground', 'states'], function(THREE, playground, states){
     window._app = playground({
+        levelCount:2,
         create: function(){
             this.renderer.setClearColor(0x000000);
             this.loadData("shaders/simple.vert.glsl");
             this.loadData("shaders/map.frag.glsl");
-            this.loadData("maps/01.blob");
+            for(var i = 1; i <= this.levelCount; i++){
+                this.loadData("maps/"+(i<10? "0" : "")+i+".blob");
+            }
+
             this.loadTexture("noise");
 
             this.messageContainer = document.getElementById("messageContainer");
             this.messageText = document.getElementById("messageText");
             this.messageConfirm = document.getElementById("messageConfirm");
 
+            var self = this;
+            this.messageConfirm.addEventListener("click", function(){
+                self.confirmMessage();
+            });
+
             this.statsContainer = document.getElementById("cellStats");
             this.emptyText = document.getElementById("emptyTargets");
             this.extraText = document.getElementById("extraCells");
             this.precisionText = document.getElementById("precision");
+
+            this.messageShowing = false;
         },
         ready: function() {
             this.resize();
@@ -57,14 +68,21 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             this.messageContainer.style.top = (this.height - this.messageContainer.clientHeight)/2 + "px";
 
             var self = this;
-            var el = function(){
-                self.messageConfirm.removeEventListener("click", el);
+            this.el = function(){
                 self.messageContainer.style.display = "none";
+                this.messageShowing = false;
+
                 if(typeof cb === "function") {
                     cb();
                 }
             };
-            this.messageConfirm.addEventListener("click", el);
+
+            this.messageShowing = true;
+        },
+        confirmMessage:function(){
+            if(this.messageShowing && this.el){
+                this.el();
+            }
         },
         showCellStats: function(empty, extra, precision){
             this.statsContainer.style.display = "block";
@@ -75,6 +93,11 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
         resize: function(){
             this.messageContainer.style.left = (this.width - this.messageContainer.clientWidth)/2 + "px";
             this.messageContainer.style.top = (this.height - this.messageContainer.clientHeight)/2 + "px";
+        },
+        keydown: function(data){
+            if(data.key == "enter"){
+                this.confirmMessage();
+            }
         }
     });
 });

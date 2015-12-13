@@ -17,10 +17,15 @@ define(['three'], function(THREE){
             this.playerPos = new THREE.Vector2(0,0);
             this.playerDirection = new THREE.Vector2(1,0);
             this.playerClockDirection = 1;
-            this.playerSpeed = 5;
+            this.playerSpeed = 20;
 
-            this.level = 1;
+            this.level = 2;
             this.loadMapData(this.level);
+
+            this.aggregateStats = {
+                fulfilled: 0,
+                extra: 0
+            };
 
             var geometry = new THREE.PlaneGeometry(2, 2);
             this.mapMaterial = new THREE.ShaderMaterial({
@@ -54,7 +59,12 @@ define(['three'], function(THREE){
             this.neededCount = 0;
             this.fulfilledCount = 0;
             this.extraCount = 0;
-            var data = this.app.data["maps/"+(number<10 ? "0" : "")+number];
+            var key = "maps/"+(number<10 ? "0" : "")+number;
+            var data = this.app.data[key];
+            if(!data){
+                console.error("Could not find map", number, key);
+                return;
+            }
             for(var x = 0; x < mapWidth; x++){
                 for(var y = 0; y < mapWidth; y++){
                     var index3 = ((y * mapWidth) + x) * 3;
@@ -136,6 +146,88 @@ define(['three'], function(THREE){
         rotPlayerDirection: function(){
             return new THREE.Vector2(this.playerDirection.y * this.playerClockDirection, -this.playerDirection.x * this.playerClockDirection);
         },
+        win: function(){
+            this.paused = true;
+            this.winCount = this.winCount ? this.winCount+1 : 1;
+            var precision = this.aggregateStats.fulfilled / (this.aggregateStats.fulfilled+this.aggregateStats.extra);
+
+            var text =
+                'YOU WON! <br/>' +
+                'You filled a total of ' + this.aggregateStats.fulfilled + ' target cells. <br/>' +
+                'You also placed a total of ' + this.aggregateStats.extra + ' additional cells.<br/>'+
+                'That is a precision of ' + Math.floor(precision*10000)/100 + "%.<br/>"+
+                'Thanks for playing, I hope you had some fun.';
+            if(this.winCount > 5)
+            {
+                if(this.winCount < 10){
+                    text += "<br/><br/> You really like clicking this button, don't you?"
+                } else if(this.winCount < 20){
+                    text += "<br/><br/> You DO realize that the game is over?"
+                } else if(this.winCount < 30){
+                    text += "<br/><br/> There is nothing left here!"
+                } else if(this.winCount < 40){
+                    text += "<br/><br/> Go rate more games!"
+                } else if(this.winCount < 50){
+                    text += "<br/><br/> If you really like this game so much, refresh to play again."
+                } else if(this.winCount < 60){
+                    text += "<br/><br/> This games name does not contain 'Clicker'."
+                } else if(this.winCount < 70){
+                    text += "<br/><br/> That button is not a cookie."
+                } else if(this.winCount < 80){
+                    text += "<br/><br/> Fine, keep clicking!"
+                } else if(this.winCount < 90){
+                    text += "<br/><br/> You are clicking great!"
+                } else if(this.winCount < 1000){
+                    var messages = [
+                        "Click again!",
+                        "You are the superclicker!",
+                        "You earned the mousebreaker achievement!",
+                        "Level up!",
+                        "Clickedy Click!",
+                        "(Pst, they are still clicking!)(Why?)(Beat's me!)",
+                        "For the End of the World spell, press Control-Alt-Delete."
+                    ];
+                    text += "<br/><br/>" + messages[Math.floor(Math.random()*messages.length)];
+                    if(this.winCount > 200){
+                        text +="<br/>" + this.winCount;
+                    }
+                } else {
+                    text += "<br/><br/> Congratulations persistant clicker/auto clicker user/source code reader. You found the last text."
+                }
+            }
+
+            var self = this;
+            this.app.showMessage( text, 'YOU WON!', function() {
+                    self.win();
+            });
+        },
+        finishLevel: function(){
+            this.aggregateStats.fulfilled += this.fulfilledCount;
+            this.aggregateStats.extra += this.extraCount;
+
+            this.paused = true;
+            var date = new Date(Date.now() - this.levelStartTime);
+            var m = date.getUTCMinutes();
+            var s = date.getSeconds();
+            var self = this;
+            this.app.showMessage(
+                'Success! <br/>' +
+                'You filled all ' + this.neededCount + ' target cells. <br/>' +
+                'You also placed ' + this.extraCount + ' additional cells.<br/>'+
+                'You needed ' + (m>0 ? (m + " minutes and ") : "") + s + " seconds",
+
+                self.level == self.app.levelCount ? 'YOU WON!' : 'Next Level',
+                function() {
+                    self.paused = false;
+                    self.level++;
+                    if(self.level > self.app.levelCount){
+                        self.win();
+                    } else {
+                        self.loadMapData(self.level);
+                    }
+                }
+            );
+        },
         seedGrowth: function(cell, turned){
             var self = this;
             if(this.getMapData(cell.x, cell.y, 0) === 0) {
@@ -144,22 +236,7 @@ define(['three'], function(THREE){
                 if (this.getMapData(cell.x, cell.y, 1)) {
                     this.fulfilledCount++;
                     if (this.fulfilledCount == this.neededCount) {
-                        this.paused = true;
-                        var date = new Date(Date.now() - this.levelStartTime);
-                        var m = date.getUTCMinutes();
-                        var s = date.getSeconds();
-                        this.app.showMessage(
-                            'Success! <br/>' +
-                            'You filled all ' + this.neededCount + ' target cells. <br/>' +
-                            'You also placed ' + this.extraCount + ' additional cells.<br/>'+
-                            'You needed ' + (m>0 ? (m + " minutes and ") : "") + s + " seconds",
-
-                            'Next Level',
-                            function() {
-                                self.paused = false;
-                                self.level++;
-                                self.loadMapData(this.level);
-                            });
+                        this.finishLevel();
                     }
                 } else {
                     this.extraCount++;
