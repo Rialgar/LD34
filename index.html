@@ -52,9 +52,35 @@
             div#messageConfirm:active{
                 border-style: inset;
             }
+
+            table#cellStats{
+                display: none;
+                position: absolute;
+                right: 1vh;
+                bottom: 1vh;
+                background-color: rgba(255,255,255,0.8);
+                padding: 1vh;
+                border-radius: 10px;
+                font-size: 3vh;
+                border-spacing: 1vh;
+                border-collapse: separate;
+                text-align: right;
+            }
         </style>
     </head>
     <body>
+        <table id="cellStats">
+            <tr>
+                <td>Empty targets: </td>
+                <td id="emptyTargets">249</td>
+            </tr><tr>
+                <td>Extra cells: </td>
+                <td id="extraCells">19</td>
+            </tr><tr>
+                <td>Precision: </td>
+                <td id="precision">89%</td>
+            </tr>
+        </table>
         <div id="messageContainer">
             <div id="messageText"></div>
             <div id="messageConfirm">OK</div>

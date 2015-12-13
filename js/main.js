@@ -36,6 +36,11 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             this.messageContainer = document.getElementById("messageContainer");
             this.messageText = document.getElementById("messageText");
             this.messageConfirm = document.getElementById("messageConfirm");
+
+            this.statsContainer = document.getElementById("cellStats");
+            this.emptyText = document.getElementById("emptyTargets");
+            this.extraText = document.getElementById("extraCells");
+            this.precisionText = document.getElementById("precision");
         },
         ready: function() {
             this.resize();
@@ -60,6 +65,12 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
                 }
             };
             this.messageConfirm.addEventListener("click", el);
+        },
+        showCellStats: function(empty, extra, precision){
+            this.statsContainer.style.display = "block";
+            this.emptyText.textContent = empty;
+            this.extraText.textContent = extra;
+            this.precisionText.textContent = Math.round(precision * 100) + "%";
         },
         resize: function(){
             this.messageContainer.style.left = (this.width - this.messageContainer.clientWidth)/2 + "px";

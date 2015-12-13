@@ -87,6 +87,14 @@ define(['three'], function(THREE){
                 this.playerDirection.set(0,-1)
             }
             this.mapDataTexture.needsUpdate = true;
+            this.updateCellStats();
+            this.levelStartTime = 0;
+        },
+        updateCellStats: function(){
+            var empty = this.neededCount - this.fulfilledCount;
+            var extra = this.extraCount;
+            var precision = this.fulfilledCount / (this.fulfilledCount + this.extraCount);
+            this.app.showCellStats(empty, extra, precision);
         },
         getMapData: function(x, y, c){
             if(x >= 0 && x < mapWidth && y >= 0 && y < mapHeight) {
@@ -137,10 +145,17 @@ define(['three'], function(THREE){
                     this.fulfilledCount++;
                     if (this.fulfilledCount == this.neededCount) {
                         this.paused = true;
-                        this.app.showMessage('Success! <br/>' +
-                            ' You filled all ' + this.neededCount + ' target blocks. <br/>' +
-                            ' You also placed ' + this.extraCount + ' additional blocks.',
-                            ' Next Level', function() {
+                        var date = new Date(Date.now() - this.levelStartTime);
+                        var m = date.getUTCMinutes();
+                        var s = date.getSeconds();
+                        this.app.showMessage(
+                            'Success! <br/>' +
+                            'You filled all ' + this.neededCount + ' target cells. <br/>' +
+                            'You also placed ' + this.extraCount + ' additional cells.<br/>'+
+                            'You needed ' + (m>0 ? (m + " minutes and ") : "") + s + " seconds",
+
+                            'Next Level',
+                            function() {
                                 self.paused = false;
                                 self.level++;
                                 self.loadMapData(this.level);
@@ -149,11 +164,15 @@ define(['three'], function(THREE){
                 } else {
                     this.extraCount++;
                 }
+                this.updateCellStats();
             }
         },
         step: function(seconds){
             if(!this.isReady || this.paused){
                 return;
+            }
+            if(!this.levelStartTime){
+                this.levelStartTime = Date.now();
             }
             var movement = seconds*this.playerSpeed;
             while(movement > 0) {

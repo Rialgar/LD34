@@ -37,6 +37,10 @@ vec2 fillDist(vec2 coords, vec2 off){
 
 void main() {
     vec2 coords = (gl_FragCoord.xy - offset)/scale;
+    if(coords.x < -1.0 || coords.x > size.x+1.0 || coords.y < -1.0 || coords.y > size.y+1.0){
+        gl_FragColor.rgb = backgroundColor;
+    }
+
     vec4 noiseValue = texture2D(noise, coords/30.0);
 
     vec2 minDist = vec2(5.0, 5.0);
