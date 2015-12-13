@@ -14,8 +14,50 @@
                 background-color: black;
                 overflow: hidden;
             }
+            div#messageContainer{
+                display: none;
+                width: 30vw;
+                min-width: 30vh;
+                position: absolute;
+                background-color: rgba(255,255,255,0.8);
+                padding: 2vh 5vh;
+                border-style: ridge;
+                border-width: 4px;
+                border-color: gray;
+                border-radius: 10px;
+                text-align: center;
+                font-size: 3vh;
+            }
+            div#messageText{
+                margin-left: auto;
+                margin-right: auto;
+                min-height: 30vh;
+            }
+            div#messageConfirm{
+                margin-left: auto;
+                margin-right: auto;
+                width: 80%;
+                background-color: #a0a0a0;
+                border-style: outset;
+                border-width: 4px;
+                border-color: lightgray;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+
+            div#messageConfirm:hover{
+                background-color: white;
+            }
+
+            div#messageConfirm:active{
+                border-style: inset;
+            }
         </style>
     </head>
     <body>
+        <div id="messageContainer">
+            <div id="messageText"></div>
+            <div id="messageConfirm">OK</div>
+        </div>
     </body>
 </html>
