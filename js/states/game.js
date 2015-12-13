@@ -17,9 +17,9 @@ define(['three'], function(THREE){
             this.playerPos = new THREE.Vector2(0,0);
             this.playerDirection = new THREE.Vector2(1,0);
             this.playerClockDirection = 1;
-            this.playerSpeed = 20;
+            this.playerSpeed = 5;
 
-            this.level = 2;
+            this.level = 1;
             this.loadMapData(this.level);
 
             this.aggregateStats = {
@@ -35,7 +35,9 @@ define(['three'], function(THREE){
                     size: {type: "v2", value: new THREE.Vector2(mapWidth, mapHeight)},
                     mapData: {type: "t", value: this.mapDataTexture},
                     noise: {type: "t", value: this.app.textures["noise"]},
-                    player: {type: "v2", value: this.playerPos}
+                    player: {type: "v2", value: this.playerPos},
+                    cooldown: {type: "f", value: 0},
+                    t: {type: "f", value: 0}
                 },
                 vertexShader: this.app.data["shaders/simple.vert"],
                 fragmentShader: this.app.data["shaders/map.frag"]
@@ -59,6 +61,9 @@ define(['three'], function(THREE){
             this.neededCount = 0;
             this.fulfilledCount = 0;
             this.extraCount = 0;
+            this.pickups = [];
+            this.timeToPlayerSpeedReset = 0;
+            this.playerSpeed = 5;
             var key = "maps/"+(number<10 ? "0" : "")+number;
             var data = this.app.data[key];
             if(!data){
@@ -83,6 +88,16 @@ define(['three'], function(THREE){
                     }
                     if(this.mapData[index4+2] === 255){
                         this.playerPos.set(x,y);
+                    } else if(this.mapData[index4+2] > 100 && this.mapData[index4+2] <= 200){
+                        this.pickups.push({
+                            type: "speed",
+                            x: x,
+                            y: y,
+                            collecting: 0,
+                            min: 100,
+                            max: 200,
+                            value: 200
+                        });
                     }
                 }
             }
@@ -135,8 +150,9 @@ define(['three'], function(THREE){
             var self = this;
             window.setTimeout(function(){
                 self.app.showMessage(
-                    "Space to grow more fruit cells. <br/>" +
-                    "R to reset level. <br/>" +
+                    "Welcome!<br/><br/>" +
+                    "Space to grow more fruit cells.<br/>" +
+                    "R to reset level.<br/>" +
                     "Anything else to switch direction.",
 
                     "Got it!",
@@ -152,7 +168,7 @@ define(['three'], function(THREE){
             var precision = this.aggregateStats.fulfilled / (this.aggregateStats.fulfilled+this.aggregateStats.extra);
 
             var text =
-                'YOU WON! <br/>' +
+                'YOU WON!<br/><br/>' +
                 'You filled a total of ' + this.aggregateStats.fulfilled + ' target cells. <br/>' +
                 'You also placed a total of ' + this.aggregateStats.extra + ' additional cells.<br/>'+
                 'That is a precision of ' + Math.floor(precision*10000)/100 + "%.<br/>"+
@@ -170,7 +186,7 @@ define(['three'], function(THREE){
                 } else if(this.winCount < 50){
                     text += "<br/><br/> If you really like this game so much, refresh to play again."
                 } else if(this.winCount < 60){
-                    text += "<br/><br/> This games name does not contain 'Clicker'."
+                    text += "<br/><br/> This game's name does not contain 'Clicker'."
                 } else if(this.winCount < 70){
                     text += "<br/><br/> That button is not a cookie."
                 } else if(this.winCount < 80){
@@ -251,6 +267,16 @@ define(['three'], function(THREE){
             if(!this.levelStartTime){
                 this.levelStartTime = Date.now();
             }
+            this.mapMaterial.uniforms.t.value += seconds;
+
+            if(this.timeToPlayerSpeedReset > 0){
+                this.timeToPlayerSpeedReset = Math.max(0, this.timeToPlayerSpeedReset - seconds);
+                if(this.timeToPlayerSpeedReset == 0){
+                    this.playerSpeed = 5;
+                }
+                this.mapMaterial.uniforms.cooldown.value = this.timeToPlayerSpeedReset / 10.0;
+            }
+
             var movement = seconds*this.playerSpeed;
             while(movement > 0) {
 
@@ -293,6 +319,24 @@ define(['three'], function(THREE){
                 } else {
                     this.playerPos.copy(newPlayerPos);
                 }
+                var self = this;
+                this.pickups.forEach(function(ea){
+                    if(!ea.collecting && ea.x == cell.x && ea.y == cell.y){
+                        ea.collecting = 1;
+                        if(ea.type == "speed"){
+                            self.playerSpeed = 20;
+                            self.timeToPlayerSpeedReset = 10;
+                        }
+                    }
+                    if(ea.collecting == 1){
+                        ea.value = Math.max(ea.value - (ea.max - ea.min) * seconds, ea.min);
+                        if(ea.value == ea.min){
+                            ea.collecting = 2;
+                            ea.value = 0;
+                        }
+                        self.setMapData(ea.x, ea.y, 2, ea.value);
+                    }
+                })
             }
             for(var x = 0; x < mapWidth; x++){
                 for(var y = 0; y < mapHeight; y++){

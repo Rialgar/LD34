@@ -26,7 +26,7 @@ requirejs.config({
 
 requirejs(['three', 'playground', 'states'], function(THREE, playground, states){
     window._app = playground({
-        levelCount:2,
+        levelCount:5,
         create: function(){
             this.renderer.setClearColor(0x000000);
             this.loadData("shaders/simple.vert.glsl");
