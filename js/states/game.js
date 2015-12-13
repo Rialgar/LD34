@@ -19,7 +19,7 @@ define(['three'], function(THREE){
             this.playerClockDirection = 1;
             this.playerSpeed = 5;
 
-            this.level = 1;
+            this.level = 6;
             this.loadMapData(this.level);
 
             this.aggregateStats = {
@@ -37,6 +37,8 @@ define(['three'], function(THREE){
                     noise: {type: "t", value: this.app.textures["noise"]},
                     player: {type: "v2", value: this.playerPos},
                     cooldown: {type: "f", value: 0},
+                    bomb: {type: "f", value: 0},
+                    explosion: {type: "v3", value: new THREE.Vector3()},
                     t: {type: "f", value: 0}
                 },
                 vertexShader: this.app.data["shaders/simple.vert"],
@@ -63,6 +65,7 @@ define(['three'], function(THREE){
             this.extraCount = 0;
             this.pickups = [];
             this.timeToPlayerSpeedReset = 0;
+            this.bombTimer = 0;
             this.playerSpeed = 5;
             var key = "maps/"+(number<10 ? "0" : "")+number;
             var data = this.app.data[key];
@@ -97,6 +100,16 @@ define(['three'], function(THREE){
                             min: 100,
                             max: 200,
                             value: 200
+                        });
+                    } else if(this.mapData[index4+2] > 0 && this.mapData[index4+2] <= 100){
+                        this.pickups.push({
+                            type: "bomb",
+                            x: x,
+                            y: y,
+                            collecting: 0,
+                            min: 0,
+                            max: 100,
+                            value: 100
                         });
                     }
                 }
@@ -277,6 +290,40 @@ define(['three'], function(THREE){
                 this.mapMaterial.uniforms.cooldown.value = this.timeToPlayerSpeedReset / 10.0;
             }
 
+            if(this.bombTimer > 0){
+                this.bombTimer = Math.max(0, this.bombTimer - seconds);
+                if(this.bombTimer == 0){
+                    this.explosion = 2.0;
+                    this.beforeRemoval = true;
+                    this.mapMaterial.uniforms.explosion.value.x = this.playerPos.x;
+                    this.mapMaterial.uniforms.explosion.value.y = this.playerPos.y;
+                }
+                this.mapMaterial.uniforms.bomb.value = this.bombTimer / 10.0;
+            }
+
+            if(this.explosion > 0){
+                this.explosion = Math.max(0.0, this.explosion - seconds);
+                if(this.beforeRemoval && this.explosion < 1.0) {
+                    this.beforeRemoval = false;
+                    var x0 = this.mapMaterial.uniforms.explosion.value.x;
+                    var y0 = this.mapMaterial.uniforms.explosion.value.y;
+                    for(var xR = Math.ceil(x0-5); xR < x0+5; xR++){
+                        for(var yR = Math.ceil(y0-5); yR < y0+5; yR++){
+                            if((xR-x0)*(xR-x0)+(yR-y0)*(yR-y0) < 25 && this.getMapData(xR, yR)) {
+                                this.setMapData(xR, yR, 0, 0);
+                                if (this.getMapData(xR, yR, 1)) {
+                                    this.fulfilledCount--;
+                                } else {
+                                    this.extraCount--;
+                                }
+                            }
+                        }
+                    }
+                    this.updateCellStats();
+                }
+                this.mapMaterial.uniforms.explosion.value.z = this.explosion / 2.0;
+            }
+
             var movement = seconds*this.playerSpeed;
             while(movement > 0) {
 
@@ -326,6 +373,12 @@ define(['three'], function(THREE){
                         if(ea.type == "speed"){
                             self.playerSpeed = 20;
                             self.timeToPlayerSpeedReset = 10;
+                        } else if(ea.type == "bomb"){
+                            if(self.bombTimer || self.explosion){
+                                ea.collecting = 0;
+                            } else {
+                                self.bombTimer = 10;
+                            }
                         }
                     }
                     if(ea.collecting == 1){

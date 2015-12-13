@@ -47,12 +47,12 @@ function readFile(){
     var rl = readline.createInterface({
         input: fs.createReadStream(inputFilename)
     });
-    var regex = /"[\\0-9]+"/;
+    var regex = /^ *(".+"),?$/;
     var map = "";
     rl.on("line", function(line){
         var match = regex.exec(line);
         if(match){
-            map += eval(match[0]);
+            map += eval(match[1]);
         }
     });
     rl.on("close", function(){
