@@ -25,7 +25,7 @@ requirejs.config({
 });
 
 requirejs(['three', 'playground', 'states'], function(THREE, playground, states){
-    window._app = playground({
+    playground({
         levelCount:10,
         create: function(){
             this.renderer.setClearColor(0x000000);
@@ -101,7 +101,6 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             this.messageContainer.style.top = (this.height - this.messageContainer.clientHeight)/2 + "px";
         },
         keydown: function(data){
-            console.log(data.key);
             if(data.key == "enter"){
                 this.confirmMessage();
             } else if(data.key == "m"){
