@@ -19,7 +19,7 @@ define(['three'], function(THREE){
             this.playerClockDirection = 1;
             this.playerSpeed = 5;
 
-            this.level = 6;
+            this.level = 1;
             this.loadMapData(this.level);
 
             this.aggregateStats = {
