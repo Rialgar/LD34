@@ -53,6 +53,14 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             this.precisionText = document.getElementById("precision");
 
             this.messageShowing = false;
+
+            window.addEventListener("keydown", function(ev){
+                if(ev.keyCode || ev.charCode === 0x20){
+                    ev.preventDefault && ev.preventDefault();
+                    ev.stopPropagation && ev.stopPropagation();
+                    ev.cancelBubble && ev.cancelBubble();
+                }
+            });
         },
         ready: function() {
             this.resize();
