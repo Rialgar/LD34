@@ -249,6 +249,14 @@ define(['three'], function(THREE){
                 function() {
                     self.paused = false;
                     self.level++;
+                    if(self.level === 7){
+                        var isOK = confirm("There are four more levels, that reference internet/gaming culture. " +
+                            "They are made to look like pixel characters that I do not own. " +
+                            "If you think that is OK for COMPO, press OK. If not, press Cancel.");
+                        if(!isOK){
+                            self.level = self.app.levelCount+1;
+                        }
+                    }
                     if(self.level > self.app.levelCount){
                         self.win();
                     } else {
