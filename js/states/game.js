@@ -54,10 +54,10 @@ define(['three'], function(THREE){
 
             this.resize();
 
-            window.stats = new Stats();
+            /*window.stats = new Stats();
             stats.domElement.style.position = 'absolute';
             stats.domElement.style.top = '0px';
-            document.body.appendChild( stats.domElement );
+            document.body.appendChild( stats.domElement );*/
         },
         loadMapData: function(number){
             this.neededCount = 0;
@@ -66,7 +66,15 @@ define(['three'], function(THREE){
             this.pickups = [];
             this.timeToPlayerSpeedReset = 0;
             this.bombTimer = 0;
+            this.explosion = 0;
             this.playerSpeed = 5;
+
+            if(this.mapMaterial) {
+                this.mapMaterial.uniforms.cooldown.value = 0;
+                this.mapMaterial.uniforms.bomb.value = 0;
+                this.mapMaterial.uniforms.explosion.value = 0;
+            }
+
             var key = "maps/"+(number<10 ? "0" : "")+number;
             var data = this.app.data[key];
             if(!data){

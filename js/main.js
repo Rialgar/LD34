@@ -4,7 +4,7 @@
 requirejs.config({
     map: {
         '*':{
-            'three': 'lib/three',
+            'three': 'lib/three.min',
             'playground': 'lib/playground-three'
         }
     },
