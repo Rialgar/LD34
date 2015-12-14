@@ -36,6 +36,7 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             }
 
             this.loadTexture("noise");
+            this.loadSound("background");
 
             this.messageContainer = document.getElementById("messageContainer");
             this.messageText = document.getElementById("messageText");
@@ -58,6 +59,11 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             this.setState(states.game);
             this.textures["noise"].wrapS = THREE.RepeatWrapping;
             this.textures["noise"].wrapT = THREE.RepeatWrapping;
+
+            this.hasMusic = true;
+            this.bgMusic = this.music.play("background", true);
+            this.music.fadeIn(this.bgMusic);
+
         },
         showMessage: function(text, button, cb) {
             this.messageText.innerHTML = text;
@@ -95,8 +101,18 @@ requirejs(['three', 'playground', 'states'], function(THREE, playground, states)
             this.messageContainer.style.top = (this.height - this.messageContainer.clientHeight)/2 + "px";
         },
         keydown: function(data){
+            console.log(data.key);
             if(data.key == "enter"){
                 this.confirmMessage();
+            } else if(data.key == "m"){
+                if(this.hasMusic) {
+                    this.hasMusic = false;
+                    this.music.stop(this.bgMusic);
+                } else {
+                    this.hasMusic = true;
+                    this.bgMusic = this.music.play("background", true);
+                    this.music.fadeIn(this.bgMusic);
+                }
             }
         }
     });

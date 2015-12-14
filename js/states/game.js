@@ -166,6 +166,7 @@ define(['three'], function(THREE){
                     "Welcome!<br/><br/>" +
                     "Space to grow more fruit cells.<br/>" +
                     "R to reset level.<br/>" +
+                    "M to toggle music.<br/>" +
                     "Anything else to switch direction.",
 
                     "Got it!",
@@ -415,7 +416,7 @@ define(['three'], function(THREE){
                 this.laySeeds = true;
             } else if (data.key === "r") {
                 this.loadMapData(this.level);
-            } else {
+            } else if(data.key !== "m" && data.key != "enter"){
                 this.playerDirection.negate();
                 this.playerClockDirection *= -1;
             }
